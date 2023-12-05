@@ -1,0 +1,61 @@
+* Res(t)catch
+A simple http server to act as a very simple file catch / retrieve tool.
+
+** Protocol
+The protocol will be a pseudo REST over http protocol. The communication will takes place over the http GET and POST protocol.
+GET protocol is used for non payload operation and such as delete, tree, and get; while POST is for payload operation such as upload, and replace.
+The command is deduced based on the location of the URI, and file directive is encoded as subresource.
+Each file stored in the system will always be paired with metadata encoded in JSON, which contain the MIME information, and additional data passed by X-* http header.
+If the paired metadata is missing or invalid, the file will be sent as `application/octet-stream`
+
+The commands are as follows:
+
+*** Upload
+/post/[fname] POST
+A post only command, where the file is stored as is with `<fname>` as its name.
+The payload is transferred inside the body of the POST.
+The MIME and information stored in the X-* header will be stored in the metadata.
+There is no file extension deduction based on MIME.
+If fname is not supplied, then the hash of the file is used as the filename, and the file will be stored without file extension.
+Upon file posting, the server will response with HTTP code 201, and in the body is the path to the resource.
+If there is name collision, then the post will be rejected, and HTTP code 400 returned.
+
+Subdirectory or subresource can be created by having additional '/' in the fname.
+
+*** Replace
+/replace/[fname] POST
+Act identially with Upload, but will never fails and return HTTP code 400.
+If there is a collision, the file stored  will be replaced by the new file.
+
+*** Tree
+/tree/[subdir] GET
+Returns the lists of the name of the stored file in the disk separated with `\n`. subdir can be supplied to show file in the subdirectory, otherwise only the name of the subdirectory will be returned.
+If get parameter of `all` is supplied, then all subdirectory from the supplied subdir will be listed as well.
+Normally the list is displayed as directory first before filename, and both of them is sorted alphabetically, but if the get parameter of `sortall` is supplied, then it will sort everything at once.
+
+*** Delete
+/delete/[fname] GET
+delete the resource and its metadata file.
+If successfull, HTTP code 200 returned.
+If failed due no file supplied, HTTP code 400 is returned.
+If failed due to other reason, HTTP code 500 is returned.
+
+*** GET
+/get/[fname] GET
+Get the resource, and its relevant `X-*` metadata.
+If the file can't be located, then HTTP code 404 is returned.
+If the metadata is invalid, then it will revert to `application/octet-stream` MIME type, with HTTP header of only `X-inf-meta=true` 
+
+** Reserved filename
+all filename stored as `meta_*.json` is disallowed, as it is the metadata pair file for each file in the server
+
+
+** Security
+This program will not implement any security (yet) as it is intended as the catching program for IOT devices running in local network.
+In the future, there is a possibility for some kind of security is implemented such as
+  1. SSL
+  2. ID Token
+
+** Future design
+  1. Allow on disk compression by using `X-compress` http header, or using /compress/[fname] URI to compress the file.
+  2. Unified metadata database. The metadata should be stored in a sqlite3 database, or stored in a unified directory to allow more filename, and less disk access.
