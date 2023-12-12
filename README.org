@@ -8,6 +8,9 @@ POST method is to post a new resource to be stored in the server.
 PUT method is to update or send a new resource in the server with specific location.
 DELETE method is to delete a resource in the server.
 
+*** HTTP Version
+Only HTTP 1.0 version is supported. Any request with other than HTTP 1.0 will be returned with HTTP 505
+
 *** HTTP header
 All http header is prefixed by Rescatch-*, so for example the update header in the post should be transmitted as "Rescatch-Update"
 
