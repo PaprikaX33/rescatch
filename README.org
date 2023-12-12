@@ -46,7 +46,7 @@ Upload the file and store it in the [fname].
 Identical to the PUT request as a convenience method.
 
 **** with POST without specific location
-/[subdir] POST
+/[subdir]/catch.api POST
 Upload the file and store it in the location dictated by the [subdir].
 The file name will be in the format of ISO8601Date_<hash>[.suffix].
 The hash is the first 32 characters of the SHA-1 hash of the file.
@@ -91,5 +91,9 @@ In the future, there is a possibility for some kind of security is implemented s
   2. ID Token
 
 ** Future design
-  1. Allow on disk compression by using `X-compress` http header, or using /compress/[fname] URI to compress the file.
+  1. Allow on disk compression by using `compress` http header
+     Another possibility is to store the compressed file by default, and adding "raw" header is a way to store it as is.
+     Additionally the server should do automatic decompression when a client sending a get request without the .gz or other compressed file suffix
   2. Unified metadata database. The metadata should be stored in a sqlite3 database, or stored in a unified directory to allow more filename, and less disk access.
+  3. use /retrieve.api endpoint to get the resource from online resource.
+     This might be very tricky to do considering the security of online resource such as cookies, user token, etc.
