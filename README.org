@@ -2,11 +2,11 @@
 A simple http server to act as a very simple file catch / retrieve tool.
 
 ** Protocol
-The protocol will be a pseudo REST over http protocol. The communication will takes place over the http GET and POST protocol.
-GET protocol is used for non payload operation and such as delete, tree, and get; while POST is for payload operation such as upload, and replace.
-The command is deduced based on the location of the URI, and file directive is encoded as subresource.
-Each file stored in the system will always be paired with metadata encoded in JSON, which contain the MIME information, and additional data passed by X-* http header.
-If the paired metadata is missing or invalid, the file will be sent as `application/octet-stream`
+The protocol will be a pseudo REST over http protocol. The communication will takes place over the fundamental http protocols, which is GET, PUT, POST, and DELETE.
+GET method is used to request the resource in the server.
+POST method is to post a new resource to be stored in the server.
+PUT method is to update or send a new resource in the server with specific location.
+DELETE method is to delete a resource in the server.
 
 The commands are as follows:
 
@@ -45,6 +45,9 @@ If failed due to other reason, HTTP code 500 is returned.
 Get the resource, and its relevant `X-*` metadata.
 If the file can't be located, then HTTP code 404 is returned.
 If the metadata is invalid, then it will revert to `application/octet-stream` MIME type, with HTTP header of only `X-inf-meta=true` 
+
+** METAdata
+Currently there is no decided method for metadata. One approach is to use the "mime_guess" crate, or by ignoring the mime entirely and do not send the content type header at all.
 
 ** Reserved filename
 all filename stored as `meta_*.json` is disallowed, as it is the metadata pair file for each file in the server
