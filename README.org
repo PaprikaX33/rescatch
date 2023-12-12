@@ -2,53 +2,87 @@
 A simple http server to act as a very simple file catch / retrieve tool.
 
 ** Protocol
-The protocol will be a pseudo REST over http protocol. The communication will takes place over the http GET and POST protocol.
-GET protocol is used for non payload operation and such as delete, tree, and get; while POST is for payload operation such as upload, and replace.
-The command is deduced based on the location of the URI, and file directive is encoded as subresource.
-Each file stored in the system will always be paired with metadata encoded in JSON, which contain the MIME information, and additional data passed by X-* http header.
-If the paired metadata is missing or invalid, the file will be sent as `application/octet-stream`
+The protocol will be a pseudo REST over http protocol. The communication will takes place over the fundamental http protocols, which is GET, PUT, POST, and DELETE.
+GET method is used to request the resource in the server.
+POST method is to post a new resource to be stored in the server.
+PUT method is to update or send a new resource in the server with specific location.
+DELETE method is to delete a resource in the server.
 
-The commands are as follows:
+*** HTTP header
+All http header is prefixed by Rescatch-*, so for example the update header in the post should be transmitted as "Rescatch-Update"
 
-*** Upload
-/post/[fname] POST
-A post only command, where the file is stored as is with `<fname>` as its name.
-The payload is transferred inside the body of the POST.
-The MIME and information stored in the X-* header will be stored in the metadata.
-There is no file extension deduction based on MIME.
-If fname is not supplied, then the hash of the file is used as the filename, and the file will be stored without file extension.
-Upon file posting, the server will response with HTTP code 201, and in the body is the path to the resource.
-If there is name collision, then the post will be rejected, and HTTP code 400 returned.
-
+** Path Hierarchy
+The root directory in the URI is the root location of the file in the directory tree.
 Subdirectory or subresource can be created by having additional '/' in the fname.
 
-*** Replace
-/replace/[fname] POST
-Act identially with Upload, but will never fails and return HTTP code 400.
-If there is a collision, the file stored  will be replaced by the new file.
+*** Reserved directory or resource
+all file with "index.html" or "ls" location in all subdirectories are reserved for the front page for the browser client, and the API client.
+Additionally the "/code-resource/" subdirectory is also reserved for the javascript and css required by the browser client.
+"catch.api" and "retrieve.api" in all subdirectory is also reserved for the use of the commands.
 
-*** Tree
-/tree/[subdir] GET
-Returns the lists of the name of the stored file in the disk separated with `\n`. subdir can be supplied to show file in the subdirectory, otherwise only the name of the subdirectory will be returned.
-If get parameter of `all` is supplied, then all subdirectory from the supplied subdir will be listed as well.
-Normally the list is displayed as directory first before filename, and both of them is sorted alphabetically, but if the get parameter of `sortall` is supplied, then it will sort everything at once.
+trying to delete or post to reserved directory will return HTTP error code of 403 Forbidden.
 
-*** Delete
-/delete/[fname] GET
-delete the resource and its metadata file.
-If successfull, HTTP code 200 returned.
-If failed due no file supplied, HTTP code 400 is returned.
-If failed due to other reason, HTTP code 500 is returned.
+** Server response
+With the exception of GET method, the server will respond with JSON encoded message with content-type of application/json.
+The structure of the JSON message is {"status": <code>, "text": "Textual explanation of the code"}.
+
+In all method, if  the server return something than 200 series of successfull code, then the response will be in JSON as well,
+unless when the request is the get request with the /index.html endpoint, which will be in the HTML format.
+
+
+** Commands
+*** Upload new file
+There are 2 way to upload new file
+
+**** with PUT for specific location
+/[fname] PUT
+Upload the file and store it in the [fname].
+If the resource is exists, it will return an error 409 unless the "Update" header is passed with the value of 1.
+If "Prepend-date" header is passed with the value of 1, then the current date in the format of ISO8601 followed with an underscore is prepended to the filename.
+
+**** With POST for specific location
+/[fname] POST
+Upload the file and store it in the [fname].
+Identical to the PUT request as a convenience method.
+
+**** with POST without specific location
+/[subdir]/catch.api POST
+Upload the file and store it in the location dictated by the [subdir].
+The file name will be in the format of ISO8601Date_<hash>[.suffix].
+The hash is the first 32 characters of the SHA-1 hash of the file.
+The optional suffix is passed from the client with the value of the "suffix" header.
+
+
+**** Server response
+In successfull post response, the server will return HTTP code 201.
+If file storing is failed, then HTTP 500 error code will be returned
 
 *** GET
-/get/[fname] GET
-Get the resource, and its relevant `X-*` metadata.
+/[fname] GET
+Get the resource denoted with the [fname]
 If the file can't be located, then HTTP code 404 is returned.
-If the metadata is invalid, then it will revert to `application/octet-stream` MIME type, with HTTP header of only `X-inf-meta=true` 
 
-** Reserved filename
-all filename stored as `meta_*.json` is disallowed, as it is the metadata pair file for each file in the server
+*** List directory
+/[subdir]/ls GET
+/[subdir]/index.html GET
+Return the lists of all of the name stored in the directory of [subdir].
+The index.html will return the lists of all file in the directory [subdir] in HTML format, separated by line, with subdirectory on top, and file on the bottom.
+The /ls endpoint will return the result in JSON data with the structure of : {"status":200, "text": "OK", "file":[], "subdirectory":[]}.
+All file and subdirectory will be sorted by alphabeical name.
 
+Header of "depth" with integer value can be supplied to list all file up to the depth of the value.
+Additionally, header of "all" can be passed with value of 1 to lists all file in the subdirectory of the [subdir].
+
+*** Delete
+/[fname] DELETE
+delete the resource.
+If successfull, HTTP code 200 returned.
+If failed due no [fname] not pointing to any file, HTTP code 404 is returned.
+If failed due to other reason, HTTP code 500 is returned.
+
+
+** METAdata
+Currently there is no decided method for metadata. One approach is to use the "mime_guess" crate, or by ignoring the mime entirely and do not send the content type header at all.
 
 ** Security
 This program will not implement any security (yet) as it is intended as the catching program for IOT devices running in local network.
@@ -57,5 +91,9 @@ In the future, there is a possibility for some kind of security is implemented s
   2. ID Token
 
 ** Future design
-  1. Allow on disk compression by using `X-compress` http header, or using /compress/[fname] URI to compress the file.
+  1. Allow on disk compression by using `compress` http header
+     Another possibility is to store the compressed file by default, and adding "raw" header is a way to store it as is.
+     Additionally the server should do automatic decompression when a client sending a get request without the .gz or other compressed file suffix
   2. Unified metadata database. The metadata should be stored in a sqlite3 database, or stored in a unified directory to allow more filename, and less disk access.
+  3. use /retrieve.api endpoint to get the resource from online resource.
+     This might be very tricky to do considering the security of online resource such as cookies, user token, etc.
