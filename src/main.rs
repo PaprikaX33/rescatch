@@ -1,7 +1,9 @@
 //use std::net::TcpListener;
 mod tcpio;
+use std::io::BufRead;
+use std::io::Write;
 
-fn main() -> std::process::ExitCode {
+fn main() -> std::io::Result<std::process::ExitCode> {
     let mut config: tcpio::Ipconf = tcpio::Ipconf {
         ip: "0.0.0.0".to_string(),
         port: 7999,
@@ -14,19 +16,50 @@ fn main() -> std::process::ExitCode {
                 println!("./program [OPTIONS] [port]");
                 println!("   -h -? --help : help");
                 println!("  Port defaults to 7999");
-                return std::process::ExitCode::from(0);
+                return Ok(std::process::ExitCode::from(0));
             }
             argm => {
                 config.port = match argm.parse() {
                     Ok(x) => x,
                     Err(x) => {
                         println!("{:?}", x);
-                        return std::process::ExitCode::from(20);
+                        return Ok(std::process::ExitCode::from(20));
                     }
                 }
             }
         }
     }
     println!("Starting listeing for connection in port {}", config.port);
-    std::process::ExitCode::from(tcpio::start_server(config))
+    Ok(std::process::ExitCode::from(tcpio::start_server(
+        config,
+        connection_handler,
+    )?))
+}
+
+fn connection_handler(mut stream: std::net::TcpStream) -> Result<u8, std::io::Error> {
+    let buf_reader = std::io::BufReader::new(&mut stream);
+    let http_request: Vec<_> = buf_reader
+        .lines()
+        .map(|result| result.unwrap())
+        .take_while(|line| !line.is_empty())
+        .collect();
+    if http_request[0] == "GET / HTTP/1.0" {
+        let status_line = "HTTP/1.1 200 OK";
+        let contents = "<html><head><title>Testing</title></head><body>Hello There</body></html>";
+        let length = contents.len();
+
+        let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
+
+        stream.write_all(response.as_bytes()).unwrap();
+    } else if http_request[0] == "GET / HTTP/1.1" {
+        let status_line = "HTTP/1.0 200 OK";
+        let contents = "<html><head><title>Testing</title></head><body>Hello There. Downgrade to 1.0 please</body></html>";
+        let length = contents.len();
+
+        let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
+        stream.write_all(response.as_bytes()).unwrap();
+    }
+    drop(stream);
+    println!("Request: {:#?}", http_request);
+    Ok(0)
 }
