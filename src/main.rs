@@ -33,9 +33,7 @@ fn main() -> std::process::ExitCode {
 }
 
 fn start_server(conf: Cmd) -> u8 {
-    let listener =
-        std::net::TcpListener::bind(format!("127.0.0.1:{}", conf.port).as_str()).unwrap();
-
+    let listener = std::net::TcpListener::bind(format!("0.0.0.0:{}", conf.port).as_str()).unwrap();
     for stream in listener.incoming() {
         let stream = stream.unwrap();
         match connection_handler(stream) {
@@ -64,14 +62,14 @@ fn connection_handler(mut stream: std::net::TcpStream) -> Result<(), std::io::Er
 
         stream.write_all(response.as_bytes()).unwrap();
     } else if http_request[0] == "GET / HTTP/1.1" {
-        let status_line = "HTTP/1.0 505 HTTP Version Not Supported";
-        let contents =
-            "<html><head><title>rescatch</title></head><body>error 505 : HTTP Version Not Supported</body></html>";
+        let status_line = "HTTP/1.0 200 OK";
+        let contents = "<html><head><title>Testing</title></head><body>Hello There Downgrade to 1.0 please</body></html>";
         let length = contents.len();
 
         let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
         stream.write_all(response.as_bytes()).unwrap();
     }
+    drop(stream);
     println!("Request: {:#?}", http_request);
     Ok(())
 }
