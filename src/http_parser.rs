@@ -1,3 +1,4 @@
+use crate::error;
 use regex::Regex;
 use std::str::FromStr;
 
@@ -11,7 +12,6 @@ pub struct HttpRequestHeader {
     version: String,
     header: std::vec::Vec<HeaderPair>,
 }
-
 impl std::fmt::Debug for HttpRequestHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("HttpRequestHeader")
@@ -22,8 +22,14 @@ impl std::fmt::Debug for HttpRequestHeader {
     }
 }
 
+impl std::fmt::Display for HttpRequestHeader {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{} {} HTTP/{}", self.method, self.uri, self.version)
+    }
+}
+
 impl FromStr for HttpRequestHeader {
-    type Err = HttpRequestError;
+    type Err = error::HttpRequestError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Define a regular expression to parse HTTP requests
         let re = Regex::new(r"^(?P<method>\w+) (?P<path>[/\w]+) (?P<version>HTTP/\d+\.\d+)$")
@@ -41,7 +47,7 @@ impl FromStr for HttpRequestHeader {
                 header: std::vec::Vec::new(),
             })
         } else {
-            Err(HttpRequestError(s.to_string()))
+            Err(s.to_string().into())
         }
     }
 }
