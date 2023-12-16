@@ -1,4 +1,5 @@
 //use std::net::TcpListener;
+mod error;
 mod http_parser;
 mod tcpio;
 use std::io::BufRead;
@@ -38,8 +39,8 @@ fn main() -> std::io::Result<std::process::ExitCode> {
     )?))
 }
 
-fn connection_handler(mut stream: std::net::TcpStream) -> Result<u8, dyn std::error::Error> {
-    let buf_reader = std::io::BufReader::new(&mut stream);
+fn connection_handler(mut stream: std::net::TcpStream) -> Result<u8, error::ServerHandlerError> {
+    let mut buf_reader = std::io::BufReader::new(&mut stream);
     /*let http_request: Vec<_> = buf_reader
             .lines()
             .map(|result| result.unwrap())
@@ -64,7 +65,7 @@ fn connection_handler(mut stream: std::net::TcpStream) -> Result<u8, dyn std::er
     let mut strrep = String::new();
     buf_reader.read_to_string(&mut strrep)?;
     let header = http_parser::HttpRequestHeader::from_str(strrep.as_str())?;
-    println!("{:?}", header);
+    println!("{}", header);
     drop(stream);
     //println!("Request: {:#?}", http_request);
     Ok(0)
