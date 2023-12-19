@@ -29,7 +29,7 @@ impl std::fmt::Display for HttpRequestHeader {
 }
 
 impl FromStr for HttpRequestHeader {
-    type Err = error::HttpRequestError;
+    type Err = error::handler::HttpRequestError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Define a regular expression to parse HTTP requests
         let re = Regex::new(r"^(?P<method>\w+) (?P<path>[/\w]+) (?P<version>HTTP/\d+\.\d+)$")

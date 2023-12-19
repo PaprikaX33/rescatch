@@ -1,4 +1,5 @@
-use super::HttpRequestError;
+pub use http::HttpRequestError;
+mod http;
 pub enum ServerHandlerError {
     IoErr(std::io::Error),
     HttpRequestError(HttpRequestError),
