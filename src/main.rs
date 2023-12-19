@@ -32,7 +32,7 @@ fn main() -> std::io::Result<std::process::ExitCode> {
             }
         }
     }
-    println!("Starting listeing for connection in port {}", config.port);
+    println!("Start listening for connection in port {}", config.port);
     Ok(std::process::ExitCode::from(tcpio::start_server(
         config,
         connection_handler,
@@ -40,6 +40,7 @@ fn main() -> std::io::Result<std::process::ExitCode> {
 }
 
 fn connection_handler(mut stream: std::net::TcpStream) -> Result<u8, error::ServerHandlerError> {
+    println!("New connection");
     let mut buf_reader = std::io::BufReader::new(&mut stream);
     /*let http_request: Vec<_> = buf_reader
             .lines()
@@ -64,6 +65,7 @@ fn connection_handler(mut stream: std::net::TcpStream) -> Result<u8, error::Serv
     }*/
     let mut strrep = String::new();
     buf_reader.read_to_string(&mut strrep)?;
+    println!("Request received");
     let header = http_parser::HttpRequestHeader::from_str(strrep.as_str())?;
     println!("{}", header);
     drop(stream);
