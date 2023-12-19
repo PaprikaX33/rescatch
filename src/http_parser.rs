@@ -29,16 +29,18 @@ impl std::fmt::Display for HttpRequestHeader {
 }
 
 impl FromStr for HttpRequestHeader {
-    type Err = error::HttpRequestError;
+    type Err = error::handler::HttpRequestError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Define a regular expression to parse HTTP requests
         let re = Regex::new(r"^(?P<method>\w+) (?P<path>[/\w]+) (?P<version>HTTP/\d+\.\d+)$")
             .expect("Error in regex creation");
         // Use the regex to capture parts of the input
         if let Some(captures) = re.captures(s) {
-            let method = captures["method"].to_string();
-            let uri = captures["path"].to_string();
-            let version = captures["version"].to_string();
+            let extractor = |name| captures.name(name).ok_or::<Self::Err>(s.to_string().into());
+            let method = extractor("method")?.as_str().to_string();
+            let uri = extractor("path")?.as_str().to_string();
+            let version = extractor("version")?.as_str().to_string();
+            let rest = extractor("rest")?.as_str().to_string();
 
             Ok(HttpRequestHeader {
                 method,
@@ -51,13 +53,3 @@ impl FromStr for HttpRequestHeader {
         }
     }
 }
-
-/*fn main() {
-    // Example usage
-    let raw_request = "GET /index.html HTTP/1.1";
-    match HttpRequest::from_str(raw_request) {
-        Ok(request) => println!("{:?}", request),
-        Err(()) => println!("Failed to parse HTTP request."),
-    }
-}
-*/
