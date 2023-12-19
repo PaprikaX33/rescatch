@@ -41,8 +41,6 @@ impl std::fmt::Display for ServerHandlerError {
         match self {
             ServerHandlerError::IoErr(err) => err.fmt(f),
             ServerHandlerError::HttpRequestError(err) => err.fmt(f),
-            /*ServerHandlerError::IoErr(err) => std::io::Error::fmt(err, f),
-            ServerHandlerError::HttpRequestError(err) => HttpRequestError::fmt(err, f),*/
         }
     }
 }
@@ -52,8 +50,6 @@ impl std::fmt::Debug for ServerHandlerError {
         match self {
             ServerHandlerError::IoErr(err) => err.fmt(f),
             ServerHandlerError::HttpRequestError(err) => err.fmt(f),
-            /*ServerHandlerError::IoErr(err) => std::io::Error::fmt(err, f),
-            ServerHandlerError::HttpRequestError(err) => HttpRequestError::fmt(err, f),*/
         }
     }
 }
