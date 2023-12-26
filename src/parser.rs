@@ -1,6 +1,7 @@
 use regex::Regex;
 pub mod header_line;
 pub mod header_pair;
+pub mod traits;
 
 use header_line::HttpHeaderLine;
 use header_pair::HttpHeaderPair;
@@ -22,7 +23,6 @@ impl std::fmt::Debug for HttpRequestMessage {
 
 impl std::fmt::Display for HttpRequestMessage {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        //write!(f, "{}\n{}\n\n{}", self.requestLine, self.headers, self.body)
         write!(f, "{}\n", self.requestLine)?;
         for pair in self.headers {
             write!(f, "{}\n", pair)?;
