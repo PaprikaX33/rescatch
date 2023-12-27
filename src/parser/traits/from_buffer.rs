@@ -4,7 +4,7 @@ pub trait FromBuf: Sized {
     type Err;
 
     // Required method
-    fn from_buf<T>(s: &str) -> Result<Self, Self::Err>
+    fn from_buf<T>(s: &mut T) -> Result<Self, Self::Err>
     where
         T: BufRead;
 }

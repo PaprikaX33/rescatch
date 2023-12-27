@@ -18,3 +18,12 @@ impl std::fmt::Display for HttpHeaderLine {
         write!(f, "{} {} HTTP/{}", self.method, self.uri, self.version)
     }
 }
+impl HttpHeaderLine {
+    pub fn new() -> Self {
+        HttpHeaderLine {
+            uri: String::new(),
+            method: String::new(),
+            version: String::new(),
+        }
+    }
+}
