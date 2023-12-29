@@ -32,16 +32,17 @@ impl FromStr for HttpRequestHeader {
     type Err = error::handler::HttpRequestError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Define a regular expression to parse HTTP requests
-        let re = Regex::new(r"^(?P<method>\w+) (?P<path>[/\w]+) (?P<version>HTTP/\d+\.\d+)$")
-            .expect("Error in regex creation");
+        let reHead = Regex::new(
+            r"^(?P<method>\w+) (?P<path>[/\w]*) (?P<version>HTTP/\d+\.\d+)\r?\n(?P<rest>.*)$",
+        )
+        .expect("Error in regex creation");
         // Use the regex to capture parts of the input
-        if let Some(captures) = re.captures(s) {
+        if let Some(captures) = reHead.captures(s) {
             let extractor = |name| captures.name(name).ok_or::<Self::Err>(s.to_string().into());
             let method = extractor("method")?.as_str().to_string();
             let uri = extractor("path")?.as_str().to_string();
             let version = extractor("version")?.as_str().to_string();
-            let rest = extractor("rest")?.as_str().to_string();
-
+            let rest = extractor("rest")?.as_str();
             Ok(HttpRequestHeader {
                 method,
                 uri,
