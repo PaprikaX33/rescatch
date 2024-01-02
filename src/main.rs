@@ -1,10 +1,9 @@
 //use std::net::TcpListener;
 mod error;
-mod http_parser;
+//mod http_parser;
+mod parser;
 mod tcpio;
-use std::io::BufRead;
-use std::io::{Read, Write};
-use std::str::FromStr;
+use parser::FromBuf;
 
 fn main() -> std::io::Result<std::process::ExitCode> {
     let mut config: tcpio::Ipconf = tcpio::Ipconf {
@@ -35,20 +34,20 @@ fn main() -> std::io::Result<std::process::ExitCode> {
     println!("Start listening for connection in port {}", config.port);
     Ok(std::process::ExitCode::from(tcpio::start_server(
         config,
-        connection_handler,
+        Handler {},
     )?))
 }
 
-fn connection_handler(mut stream: std::net::TcpStream) -> Result<u8, error::ServerHandlerError> {
-    println!("New connection");
-    let mut buf_reader = std::io::BufReader::new(&mut stream);
-    let mut lines = buf_reader.lines();
-    //let mut strrep = String::new();
-    //buf_reader.read_to_string(&mut strrep)?;
-    println!("Request received");
-    let header = http_parser::HttpRequestHeader::from_str(strrep.as_str())?;
-    println!("{}", header);
-    drop(stream);
-    //println!("Request: {:#?}", http_request);
-    Ok(0)
+struct Handler {}
+impl tcpio::TCPHandler for Handler {
+    type Err = <parser::HttpRequestMessage as FromBuf>::Err;
+    fn execute(&self, mut stream: std::net::TcpStream) -> Result<u8, Self::Err> {
+        println!("New connection");
+        let mut buf_reader = std::io::BufReader::new(&mut stream);
+        println!("Request received");
+        let request = parser::HttpRequestMessage::from_buf(&mut buf_reader)?;
+        println!("{}", request);
+        drop(stream);
+        Ok(0)
+    }
 }
