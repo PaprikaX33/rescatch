@@ -56,7 +56,7 @@ impl std::str::FromStr for HttpHeaderLine {
             let uri = extractor("path")?.as_str().to_string();
             let version = extractor("version")?.as_str().to_string();
             Ok(Self {
-                method,
+                method: method.parse()?,
                 uri,
                 version,
             })
