@@ -1,8 +1,9 @@
-use regex::Regex;
+//use regex::Regex;
+mod error;
 pub mod header_line;
 pub mod header_pair;
 pub mod traits;
-
+use error::HttpRequestMessageErr;
 use header_line::HttpHeaderLine;
 use header_pair::HttpHeaderPair;
 use std::io::BufRead;
@@ -44,7 +45,8 @@ impl HttpRequestMessage {
 }
 
 impl FromBuf for HttpRequestMessage {
-    type Err = std::io::Error;
+    type Err = HttpRequestMessageErr; //todo()
+                                      //type Err = std::io::Error;
     fn from_buf<T>(s: &mut T) -> Result<Self, Self::Err>
     where
         T: BufRead,
@@ -56,6 +58,8 @@ impl FromBuf for HttpRequestMessage {
             // End of input
             return Ok(HttpRequestMessage::new());
         }
+        let head_line = std::str::from_utf8(&act_buf)?.parse::<HttpHeaderLine>()?;
+        println!("{}", head_line);
         todo!()
     }
 }
