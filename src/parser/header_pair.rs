@@ -1,8 +1,5 @@
 use regex::Regex;
 use std::fmt::{Debug, Display};
-//mod error;
-//use error::HttpHeaderPairErr;
-//type Err = HttpHeaderPairErr;
 pub struct HttpHeaderPair {
     key: String,
     val: String,
