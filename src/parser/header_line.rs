@@ -42,7 +42,8 @@ impl std::str::FromStr for HttpHeaderLine {
     type Err = HttpHeaderLineErr;
     // Required method
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let rex = Regex::new(r"^(?P<method>\w+) (?P<path>[/\w]*) (?P<version>HTTP/\d+\.\d+)\r?$")?;
+        let rex =
+            Regex::new(r"^(?P<method>\w+) (?P<path>[/\w]*) (?P<version>HTTP/\d+\.\d+)\r?\n?$")?;
         if let Some(captures) = rex.captures(s) {
             let extractor = |name| {
                 captures
