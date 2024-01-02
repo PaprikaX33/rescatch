@@ -1,7 +1,7 @@
 * Res(t)catch
 A simple http server to act as a very simple file catch / retrieve tool.
 
-[[https://github.com/PaprikaX33/rescratch/actions/workflows/rust.yml/badge.svg]]
+[[[[https://github.com/PaprikaX33/rescratch/actions/workflows/rust_check.yml/badge.svg]]]] [[[[https://github.com/PaprikaX33/rescratch/actions/workflows/rust_test.yml/badge.svg]]
 
 ** Protocol
 The protocol will be a pseudo REST over http protocol. The communication will takes place over the fundamental http protocols, which is GET, PUT, POST, and DELETE.
