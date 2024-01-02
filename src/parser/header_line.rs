@@ -43,7 +43,7 @@ impl std::str::FromStr for HttpHeaderLine {
     // Required method
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let rex =
-            Regex::new(r"^(?P<method>\w+) (?P<path>[/\w]*) (?P<version>HTTP/\d+\.\d+)\r?\n?$")?;
+            Regex::new(r"(?i)^(?P<method>\w+) (?P<path>[/\w]*) HTTP/(?P<version>\d+\.\d+)\r?\n?$")?;
         if let Some(captures) = rex.captures(s) {
             let extractor = |name| {
                 captures
