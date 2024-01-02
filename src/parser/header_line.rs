@@ -1,8 +1,11 @@
 use regex::Regex;
 mod error;
 pub use error::HttpHeaderLineErr;
+mod method;
+pub use method::HttpMethod;
+
 pub struct HttpHeaderLine {
-    method: String,
+    method: HttpMethod,
     uri: String,
     version: String,
 }
@@ -25,17 +28,22 @@ impl HttpHeaderLine {
     pub fn new() -> Self {
         HttpHeaderLine {
             uri: String::new(),
-            method: String::new(),
+            method: HttpMethod::new(),
             version: String::new(),
         }
     }
 }
-
+impl std::default::Default for HttpHeaderLine {
+    fn default() -> Self {
+        return Self::new();
+    }
+}
 impl std::str::FromStr for HttpHeaderLine {
     type Err = HttpHeaderLineErr;
     // Required method
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let rex = Regex::new(r"^(?P<method>\w+) (?P<path>[/\w]*) (?P<version>HTTP/\d+\.\d+)\r?$")?;
+        let rex =
+            Regex::new(r"^(?P<method>\w+) (?P<path>[/\w]*) (?P<version>HTTP/\d+\.\d+)\r?\n?$")?;
         if let Some(captures) = rex.captures(s) {
             let extractor = |name| {
                 captures
@@ -49,7 +57,7 @@ impl std::str::FromStr for HttpHeaderLine {
             let uri = extractor("path")?.as_str().to_string();
             let version = extractor("version")?.as_str().to_string();
             Ok(Self {
-                method,
+                method: method.parse()?,
                 uri,
                 version,
             })

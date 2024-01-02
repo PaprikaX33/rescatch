@@ -44,9 +44,14 @@ impl HttpRequestMessage {
     }
 }
 
+impl std::default::Default for HttpRequestMessage {
+    fn default() -> Self {
+        return Self::new();
+    }
+}
+
 impl FromBuf for HttpRequestMessage {
-    type Err = HttpRequestMessageErr; //todo()
-                                      //type Err = std::io::Error;
+    type Err = HttpRequestMessageErr;
     fn from_buf<T>(s: &mut T) -> Result<Self, Self::Err>
     where
         T: BufRead,
