@@ -65,6 +65,21 @@ impl FromBuf for HttpRequestMessage {
         }
         let head_line = std::str::from_utf8(&act_buf)?.parse::<HttpHeaderLine>()?;
         println!("{}", head_line);
+        let mut head_arg: std::vec::Vec<HttpHeaderPair> = std::vec::Vec::new();
+        loop {
+            let mut act_buf = Vec::<u8>::new();
+            let arg_read = s.read_until(line_tok, &mut act_buf)?;
+            if arg_read == 0 {
+                break;
+            }
+            let arg_line = std::str::from_utf8(&act_buf)?;
+            if let Ok(result) = header_pair::HttpHeaderPair::parse_header_line(&arg_line) {
+                head_arg.push(result);
+            } else {
+                break;
+            }
+        }
+        println!("{:?}", head_arg);
         todo!()
     }
 }

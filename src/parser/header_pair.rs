@@ -1,8 +1,8 @@
 use regex::Regex;
 use std::fmt::{Debug, Display};
-mod error;
-use error::HttpHeaderPairErr;
-type Err = HttpHeaderPairErr;
+//mod error;
+//use error::HttpHeaderPairErr;
+//type Err = HttpHeaderPairErr;
 pub struct HttpHeaderPair {
     key: String,
     val: String,
@@ -24,20 +24,16 @@ impl Display for HttpHeaderPair {
 }
 
 impl HttpHeaderPair {
-    pub fn parse_header_line(s: &str) -> Result<Self, Err> {
-        let rex = Regex::new(r"(?ui)^(?P<key>[\w]+)\s*:\s*(?P<val>[^\r\n:]+)\r?\n?$")
+    pub fn parse_header_line(s: &str) -> Result<Self, ()> {
+        let rex = Regex::new(r"(?ui)^(?P<key>[\w]+)\s*:\s*(?P<val>[^\r\n]+)\r?\n?$")
             .expect(&format!("Unable to compile the regex in {}", file!()));
         if let Some(captures) = rex.captures(s) {
-            let extractor = |name| {
-                captures
-                    .name(name)
-                    .ok_or::<Err>(HttpHeaderPairErr::InvalidLine(s.to_string()))
-            };
+            let extractor = |name| captures.name(name).ok_or(());
             let key = extractor("key")?.as_str().to_string();
             let val = extractor("val")?.as_str().to_string();
             Ok(Self { key, val })
         } else {
-            Err(HttpHeaderPairErr::InvalidLine(s.to_string()))
+            Err(())
         }
     }
 }
