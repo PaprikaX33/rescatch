@@ -32,12 +32,16 @@ impl HttpHeaderLine {
             version: String::new(),
         }
     }
+    pub fn method(&self) -> HttpMethod {
+        return self.method.clone();
+    }
 }
 impl std::default::Default for HttpHeaderLine {
     fn default() -> Self {
         return Self::new();
     }
 }
+
 impl std::str::FromStr for HttpHeaderLine {
     type Err = HttpHeaderLineErr;
     // Required method

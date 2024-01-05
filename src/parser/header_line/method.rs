@@ -1,6 +1,9 @@
 use super::error::HttpHeaderLineErr;
+
+#[derive(Clone)]
 pub enum HttpMethod {
     GET,
+    HEAD,
     POST,
     PUT,
     DELETE,
@@ -9,6 +12,15 @@ pub enum HttpMethod {
 impl HttpMethod {
     pub fn new() -> Self {
         return HttpMethod::GET;
+    }
+    pub fn has_body(&self) -> bool {
+        match self {
+            Self::GET => false,
+            Self::HEAD => false,
+            Self::POST => true,
+            Self::PUT => true,
+            Self::DELETE => false,
+        }
     }
 }
 impl std::fmt::Debug for HttpMethod {
@@ -23,6 +35,7 @@ impl std::fmt::Display for HttpMethod {
             "{}",
             match &self {
                 Self::GET => "GET",
+                Self::HEAD => "HEAD",
                 Self::POST => "POST",
                 Self::PUT => "PUT",
                 Self::DELETE => "DELETE",
@@ -43,6 +56,7 @@ impl std::str::FromStr for HttpMethod {
         let st = s.to_uppercase();
         Ok(match st.as_str() {
             "GET" => Self::GET,
+            "HEAD" => Self::HEAD,
             "POST" => Self::POST,
             "PUT" => Self::PUT,
             "DELETE" => Self::DELETE,

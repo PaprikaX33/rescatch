@@ -1,10 +1,11 @@
-//use regex::Regex;
+use regex::Regex;
 mod error;
 pub mod header_line;
 pub mod header_pair;
 pub mod traits;
 use error::HttpRequestMessageErr;
 use header_line::HttpHeaderLine;
+pub use header_line::HttpMethod;
 use header_pair::HttpHeaderPair;
 use std::io::BufRead;
 pub use traits::FromBuf;
@@ -66,6 +67,8 @@ impl FromBuf for HttpRequestMessage {
     where
         T: BufRead,
     {
+        let end_rex = Regex::new(r"(?ui)^\r?\n?$")
+            .expect(&format!("Unable to compile the regex in {}", file!()));
         let line_tok = b'\n';
         let mut act_buf = Vec::<u8>::new();
         let head_read = s.read_until(line_tok, &mut act_buf)?;
@@ -74,34 +77,45 @@ impl FromBuf for HttpRequestMessage {
             return Ok(HttpRequestMessage::new());
         }
         let head_line = std::str::from_utf8(&act_buf)?.parse::<HttpHeaderLine>()?;
-        //println!("{}", head_line);
         let mut head_arg: std::vec::Vec<HttpHeaderPair> = std::vec::Vec::new();
         loop {
             act_buf.clear();
-            //let mut act_buf = Vec::<u8>::new();
             let arg_read = s.read_until(line_tok, &mut act_buf)?;
             if arg_read == 0 {
                 break;
             }
             let arg_line = std::str::from_utf8(&act_buf)?;
+            if end_rex.is_match(arg_line) {
+                // No more header
+                break;
+            }
             if let Ok(result) = header_pair::HttpHeaderPair::parse_header_line(&arg_line) {
                 head_arg.push(result);
             } else {
                 break;
             }
         }
-        loop {
-            let chunk = s.fill_buf()?;
-            let len = chunk.len();
+        //Body or bodyless
+        if !head_line.method().has_body() {
+            return Ok(Self {
+                request_line: head_line,
+                headers: head_arg,
+                body: Vec::new(),
+            });
+        } else {
+            loop {
+                let chunk = s.fill_buf()?;
+                let len = chunk.len();
 
-            if len == 0 {
-                // Buffer is empty, break out of the loop
-                break;
+                if len == 0 {
+                    // Buffer is empty, break out of the loop
+                    break;
+                }
+                // Extend the data vector with the read data
+                act_buf.extend_from_slice(chunk);
+                // Consume the data read from the buffer
+                s.consume(len);
             }
-            // Extend the data vector with the read data
-            act_buf.extend_from_slice(chunk);
-            // Consume the data read from the buffer
-            s.consume(len);
         }
         println!("{:?}", head_arg);
         return Ok(Self {
