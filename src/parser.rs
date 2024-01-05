@@ -11,7 +11,7 @@ pub use traits::FromBuf;
 pub struct HttpRequestMessage {
     request_line: HttpHeaderLine,
     headers: std::vec::Vec<HttpHeaderPair>,
-    body: String,
+    body: std::vec::Vec<u8>,
 }
 
 impl std::fmt::Debug for HttpRequestMessage {
@@ -30,7 +30,17 @@ impl std::fmt::Display for HttpRequestMessage {
         for pair in &self.headers {
             write!(f, "{}\n", pair)?;
         }
-        write!(f, "\n{}", self.body)
+        match std::str::from_utf8(self.body.as_slice()) {
+            Ok(textural) => write!(f, "\n{}", textural),
+            Err(_) => write!(
+                f,
+                "\n{}",
+                self.body
+                    .iter()
+                    .map(|val| format!("{:02X}", val))
+                    .collect::<String>()
+            ),
+        }
     }
 }
 
@@ -39,7 +49,7 @@ impl HttpRequestMessage {
         HttpRequestMessage {
             request_line: HttpHeaderLine::new(),
             headers: Vec::new(),
-            body: String::new(),
+            body: Vec::new(),
         }
     }
 }
@@ -64,10 +74,11 @@ impl FromBuf for HttpRequestMessage {
             return Ok(HttpRequestMessage::new());
         }
         let head_line = std::str::from_utf8(&act_buf)?.parse::<HttpHeaderLine>()?;
-        println!("{}", head_line);
+        //println!("{}", head_line);
         let mut head_arg: std::vec::Vec<HttpHeaderPair> = std::vec::Vec::new();
         loop {
-            let mut act_buf = Vec::<u8>::new();
+            act_buf.clear();
+            //let mut act_buf = Vec::<u8>::new();
             let arg_read = s.read_until(line_tok, &mut act_buf)?;
             if arg_read == 0 {
                 break;
@@ -79,7 +90,24 @@ impl FromBuf for HttpRequestMessage {
                 break;
             }
         }
+        loop {
+            let chunk = s.fill_buf()?;
+            let len = chunk.len();
+
+            if len == 0 {
+                // Buffer is empty, break out of the loop
+                break;
+            }
+            // Extend the data vector with the read data
+            act_buf.extend_from_slice(chunk);
+            // Consume the data read from the buffer
+            s.consume(len);
+        }
         println!("{:?}", head_arg);
-        todo!()
+        return Ok(Self {
+            request_line: head_line,
+            headers: head_arg,
+            body: act_buf,
+        });
     }
 }
