@@ -1,3 +1,4 @@
+//! This file can be deleted after transfering the parser out
 use regex::Regex;
 use std::fmt::{Debug, Display};
 pub struct HttpHeaderPair {
@@ -19,7 +20,12 @@ impl Display for HttpHeaderPair {
         write!(f, "{}:{}", self.key, self.val)
     }
 }
-
+impl Into<(String, String)> for HttpHeaderPair {
+    // Required method
+    fn into(self) -> (String, String) {
+        return (self.key, self.val);
+    }
+}
 impl HttpHeaderPair {
     pub fn parse_header_line(s: &str) -> Result<Self, ()> {
         let rex =

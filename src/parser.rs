@@ -6,12 +6,13 @@ pub mod traits;
 use error::HttpRequestMessageErr;
 use header_line::HttpHeaderLine;
 pub use header_line::HttpMethod;
-use header_pair::HttpHeaderPair;
+use std::collections::HashMap;
 use std::io::BufRead;
 pub use traits::FromBuf;
+
 pub struct HttpRequestMessage {
     request_line: HttpHeaderLine,
-    headers: std::vec::Vec<HttpHeaderPair>,
+    headers: HashMap<String, String>,
     body: std::vec::Vec<u8>,
 }
 
@@ -28,8 +29,8 @@ impl std::fmt::Debug for HttpRequestMessage {
 impl std::fmt::Display for HttpRequestMessage {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}\n", self.request_line)?;
-        for pair in &self.headers {
-            write!(f, "{}\n", pair)?;
+        for (key, val) in &self.headers {
+            write!(f, "{}: {}\n", key, val)?;
         }
         match std::str::from_utf8(self.body.as_slice()) {
             Ok(textural) => write!(f, "\n{}", textural),
@@ -49,7 +50,7 @@ impl HttpRequestMessage {
     fn new() -> Self {
         HttpRequestMessage {
             request_line: HttpHeaderLine::new(),
-            headers: Vec::new(),
+            headers: HashMap::new(),
             body: Vec::new(),
         }
     }
@@ -77,7 +78,7 @@ impl FromBuf for HttpRequestMessage {
             return Ok(HttpRequestMessage::new());
         }
         let head_line = std::str::from_utf8(&act_buf)?.parse::<HttpHeaderLine>()?;
-        let mut head_arg: std::vec::Vec<HttpHeaderPair> = std::vec::Vec::new();
+        let mut head_arg: HashMap<String, String> = HashMap::new();
         loop {
             act_buf.clear();
             let arg_read = s.read_until(line_tok, &mut act_buf)?;
@@ -90,7 +91,8 @@ impl FromBuf for HttpRequestMessage {
                 break;
             }
             if let Ok(result) = header_pair::HttpHeaderPair::parse_header_line(&arg_line) {
-                head_arg.push(result);
+                let (key, val): (String, String) = result.into();
+                head_arg.insert(key, val);
             } else {
                 break;
             }
