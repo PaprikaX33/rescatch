@@ -10,9 +10,11 @@ use std::collections::HashMap;
 use std::io::BufRead;
 pub use traits::FromBuf;
 
+type HeaderArgument = HashMap<String, String>;
+
 pub struct HttpRequestMessage {
     request_line: HttpHeaderLine,
-    headers: HashMap<String, String>,
+    headers: HeaderArgument,
     body: std::vec::Vec<u8>,
 }
 
@@ -50,7 +52,7 @@ impl HttpRequestMessage {
     fn new() -> Self {
         HttpRequestMessage {
             request_line: HttpHeaderLine::new(),
-            headers: HashMap::new(),
+            headers: HeaderArgument::new(),
             body: Vec::new(),
         }
     }
@@ -78,7 +80,7 @@ impl FromBuf for HttpRequestMessage {
             return Ok(HttpRequestMessage::new());
         }
         let head_line = std::str::from_utf8(&act_buf)?.parse::<HttpHeaderLine>()?;
-        let mut head_arg: HashMap<String, String> = HashMap::new();
+        let mut head_arg: HeaderArgument = HeaderArgument::new();
         loop {
             act_buf.clear();
             let arg_read = s.read_until(line_tok, &mut act_buf)?;
