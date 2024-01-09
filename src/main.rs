@@ -4,6 +4,7 @@ mod error;
 mod parser;
 mod tcpio;
 use parser::FromBuf;
+use std::io::Write;
 
 fn main() -> std::io::Result<std::process::ExitCode> {
     let mut config: tcpio::Ipconf = tcpio::Ipconf {
@@ -45,8 +46,15 @@ impl tcpio::TCPHandler for Handler {
         println!("New connection");
         let mut buf_reader = std::io::BufReader::new(&mut stream);
         println!("Request received");
-        let request = parser::HttpRequestMessage::from_buf(&mut buf_reader)?;
+        let Ok(request) = parser::HttpRequestMessage::from_buf(&mut buf_reader) else {
+            let response = "HTTP/1.0 400 Bad Request\r\n\r\n<html><head><title>BadReq</title></head><body>Bad Request</body></html>";
+            stream.write_all(response.as_bytes()).unwrap();
+            drop(stream);
+            return Ok(0);
+        };
         println!("{}", request);
+        let response = "HTTP/1.0 200 OK\r\n\r\n<html><head><title>Hello World</title></head><body>Hello from server</body></html>";
+        stream.write_all(response.as_bytes()).unwrap();
         drop(stream);
         Ok(0)
     }
