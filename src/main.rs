@@ -1,6 +1,7 @@
 //use std::net::TcpListener;
 mod error;
 mod html;
+mod response;
 //mod http_parser;
 mod parser;
 mod tcpio;
