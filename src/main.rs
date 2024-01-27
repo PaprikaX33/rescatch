@@ -71,6 +71,10 @@ impl tcpio::TCPHandler for Handler {
                 )
                 .to_string(),
             ));
+        builder.set_arg(
+            "Set-Cookie".to_string(),
+            "access=AccessedRecently; max-age=300".to_string(),
+        );
         stream
             .write_all(&(builder.finalize().unwrap()).as_bytes())
             .unwrap();

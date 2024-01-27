@@ -1,3 +1,4 @@
+use super::super::HeaderArgument;
 use super::HttpResponse;
 use super::HttpVersion;
 use super::MessageBody;
@@ -6,6 +7,7 @@ pub struct HttpResponseBuilder {
     err_message: Option<String>,
     version: Option<HttpVersion>,
     body: Option<MessageBody>,
+    args: HeaderArgument,
 }
 
 impl HttpResponseBuilder {
@@ -15,6 +17,7 @@ impl HttpResponseBuilder {
             err_message: None,
             version: None,
             body: None,
+            args: HeaderArgument::new(),
         }
     }
     pub fn set_code(&mut self, code: u16) -> &mut Self {
@@ -33,6 +36,10 @@ impl HttpResponseBuilder {
         self.body = Some(body);
         self
     }
+    pub fn set_arg(&mut self, key: String, val: String) -> &mut Self {
+        self.args.insert(key, val);
+        self
+    }
     /// Finalized the construction
     /// TODO: Proper error
     pub fn finalize(self) -> Result<HttpResponse, String> {
@@ -44,6 +51,7 @@ impl HttpResponseBuilder {
         };
         let err = self.err_message;
         let body = self.body;
-        Ok(HttpResponse::builder(code, err, ver, body))
+        let args = self.args;
+        Ok(HttpResponse::builder(code, err, ver, body, args))
     }
 }
