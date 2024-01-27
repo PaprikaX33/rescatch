@@ -2,7 +2,6 @@
 mod error;
 mod html;
 mod http;
-//mod http_parser;
 mod parser;
 mod tcpio;
 use http::response;
