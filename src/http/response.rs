@@ -1,4 +1,5 @@
 mod builder;
+mod status_code;
 use super::HeaderArgument;
 pub use builder::HttpResponseBuilder;
 
@@ -39,10 +40,7 @@ impl HttpResponse {
                 self.code,
                 match &self.err_message {
                     Some(txt) => txt.as_str(),
-                    None => match self.code {
-                        400 => "Bad Request",
-                        _ => "Unknown Code",
-                    },
+                    None => status_code::str_expand(self.code),
                 },
             )
             .as_bytes(),
