@@ -1,13 +1,13 @@
 //use std::net::TcpListener;
 mod error;
 mod html;
-mod response;
+mod http;
 //mod http_parser;
 mod parser;
 mod tcpio;
+use http::response;
 use parser::FromBuf;
 use std::io::Write;
-
 fn main() -> std::io::Result<std::process::ExitCode> {
     let mut config: tcpio::Ipconf = tcpio::Ipconf {
         ip: "0.0.0.0".to_string(),
