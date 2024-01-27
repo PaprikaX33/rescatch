@@ -34,9 +34,12 @@ impl HttpResponse {
                     HttpVersion::Extended => "1.1",
                 },
                 self.code,
-                match self.code {
-                    400 => "Bad Request",
-                    _ => "Unknown Code",
+                match &self.err_message {
+                    Some(txt) => txt.as_str(),
+                    None => match self.code {
+                        400 => "Bad Request",
+                        _ => "Unknown Code",
+                    },
                 },
             )
             .as_bytes(),

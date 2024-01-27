@@ -59,11 +59,27 @@ impl tcpio::TCPHandler for Handler {
             return Ok(0);
         };
         println!("{}", request);
-        let response = format!(
+        let mut builder = response::HttpResponseBuilder::new();
+        builder
+            .set_code(200)
+            .set_version(response::HttpVersion::Basic);
+        builder
+            .set_err_message("OK".to_string())
+            .set_body(response::MessageBody::Str(
+                format!(
+                    "<html><head><title>Local</title></head><body>{}</body></html>",
+                    html::sanitize(format!("{}", request).as_str())
+                )
+                .to_string(),
+            ));
+        /*let response = format!(
             "HTTP/1.0 200 OK\r\n\r\n<html><head><title>Local</title></head><body>{}</body></html>",
             html::sanitize(format!("{}", request).as_str())
         );
-        stream.write_all(response.as_bytes()).unwrap();
+        stream.write_all(response.as_bytes()).unwrap();*/
+        stream
+            .write_all(&(builder.finalize().unwrap()).as_bytes())
+            .unwrap();
         drop(stream);
         Ok(0)
     }
