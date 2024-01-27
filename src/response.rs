@@ -1,3 +1,6 @@
+mod builder;
+use builder::HttpResponseBuilder;
+
 enum MessageBody {
     Str(String),
     Vec(std::vec::Vec<u8>),
