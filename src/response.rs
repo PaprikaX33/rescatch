@@ -1,11 +1,11 @@
 mod builder;
-use builder::HttpResponseBuilder;
+pub use builder::HttpResponseBuilder;
 
-enum MessageBody {
+pub enum MessageBody {
     Str(String),
     Vec(std::vec::Vec<u8>),
 }
-enum HttpVersion {
+pub enum HttpVersion {
     /// Basic
     /// as the basic of HTTP/1.0
     Basic,

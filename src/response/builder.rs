@@ -9,25 +9,33 @@ pub struct HttpResponseBuilder {
 }
 
 impl HttpResponseBuilder {
-    fn set_code(&mut self, code: u16) -> &mut Self {
+    pub fn new() -> HttpResponseBuilder {
+        HttpResponseBuilder {
+            code: None,
+            err_message: None,
+            version: None,
+            body: None,
+        }
+    }
+    pub fn set_code(&mut self, code: u16) -> &mut Self {
         self.code = Some(code);
         self
     }
-    fn set_version(&mut self, ver: HttpVersion) -> &mut Self {
+    pub fn set_version(&mut self, ver: HttpVersion) -> &mut Self {
         self.version = Some(ver);
         self
     }
-    fn set_err_message(&mut self, err: String) -> &mut Self {
+    pub fn set_err_message(&mut self, err: String) -> &mut Self {
         self.err_message = Some(err);
         self
     }
-    fn set_body(&mut self, body: MessageBody) -> &mut Self {
+    pub fn set_body(&mut self, body: MessageBody) -> &mut Self {
         self.body = Some(body);
         self
     }
     /// Finalized the construction
     /// TODO: Proper error
-    fn finalize(self) -> Result<HttpResponse, String> {
+    pub fn finalize(self) -> Result<HttpResponse, String> {
         let Some(code) = self.code else {
             return Err("Missing response code".to_string());
         };

@@ -49,8 +49,12 @@ impl tcpio::TCPHandler for Handler {
         let mut buf_reader = std::io::BufReader::new(&mut stream);
         println!("Request received");
         let Ok(request) = parser::HttpRequestMessage::from_buf(&mut buf_reader) else {
-            let response = "HTTP/1.0 400 Bad Request\r\n\r\n<html><head><title>BadReq</title></head><body>Bad Request</body></html>";
-            stream.write_all(response.as_bytes()).unwrap();
+            let mut builder = response::HttpResponseBuilder::new();
+            builder.set_code(400).set_version(response::HttpVersion::Basic);
+            builder.set_body(response::MessageBody::Str("<html><head><title>BadReq</title></head><body>Bad Request</body></html>".to_string()));
+            //let response = "HTTP/1.0 400 Bad Request\r\n\r\n<html><head><title>BadReq</title></head><body>Bad Request</body></html>";
+            //stream.write_all(response.as_bytes()).unwrap();
+            stream.write_all(&(builder.finalize().unwrap()).as_bytes()).unwrap();
             drop(stream);
             return Ok(0);
         };
