@@ -1,6 +1,7 @@
 //use std::net::TcpListener;
 mod error;
 mod html;
+mod response;
 //mod http_parser;
 mod parser;
 mod tcpio;
@@ -48,17 +49,31 @@ impl tcpio::TCPHandler for Handler {
         let mut buf_reader = std::io::BufReader::new(&mut stream);
         println!("Request received");
         let Ok(request) = parser::HttpRequestMessage::from_buf(&mut buf_reader) else {
-            let response = "HTTP/1.0 400 Bad Request\r\n\r\n<html><head><title>BadReq</title></head><body>Bad Request</body></html>";
-            stream.write_all(response.as_bytes()).unwrap();
+            let mut builder = response::HttpResponseBuilder::new();
+            builder.set_code(400).set_version(response::HttpVersion::Basic);
+            builder.set_body(response::MessageBody::Str("<html><head><title>BadReq</title></head><body>Bad Request</body></html>".to_string()));
+            //stream.write_all(response.as_bytes()).unwrap();
+            stream.write_all(&(builder.finalize().unwrap()).as_bytes()).unwrap();
             drop(stream);
             return Ok(0);
         };
         println!("{}", request);
-        let response = format!(
-            "HTTP/1.0 200 OK\r\n\r\n<html><head><title>Local</title></head><body>{}</body></html>",
-            html::sanitize(format!("{}", request).as_str())
-        );
-        stream.write_all(response.as_bytes()).unwrap();
+        let mut builder = response::HttpResponseBuilder::new();
+        builder
+            .set_code(200)
+            .set_version(response::HttpVersion::Basic);
+        builder
+            .set_err_message("OK".to_string())
+            .set_body(response::MessageBody::Str(
+                format!(
+                    "<html><head><title>Local</title></head><body>{}</body></html>",
+                    html::sanitize(format!("{}", request).as_str())
+                )
+                .to_string(),
+            ));
+        stream
+            .write_all(&(builder.finalize().unwrap()).as_bytes())
+            .unwrap();
         drop(stream);
         Ok(0)
     }
