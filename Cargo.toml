@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 aho-corasick = "1.1.2"
 regex = "1.10.2"
+runwrap = { git = "https://github.com/PaprikaX33/runwrap.git", tag = "0.1.1", version = "0.1.1" }

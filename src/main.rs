@@ -6,6 +6,7 @@ mod parser;
 mod tcpio;
 use http::response;
 use parser::FromBuf;
+use runwrap::rn;
 use std::io::Write;
 fn main() -> std::io::Result<std::process::ExitCode> {
     let mut config: tcpio::Ipconf = tcpio::Ipconf {
@@ -52,7 +53,7 @@ impl tcpio::TCPHandler for Handler {
             builder.set_code(400).set_version(response::HttpVersion::Basic);
             builder.set_body(response::MessageBody::Str("<html><head><title>BadReq</title></head><body>Bad Request</body></html>".to_string()));
             //stream.write_all(response.as_bytes()).unwrap();
-            stream.write_all(&(builder.finalize().unwrap()).as_bytes()).unwrap();
+            stream.write_all(&(builder.finalize().runwrap()).as_bytes()).unwrap();
             drop(stream);
             return Ok(0);
         };
