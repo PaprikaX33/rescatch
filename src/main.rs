@@ -52,7 +52,6 @@ impl tcpio::TCPHandler for Handler {
             let mut builder = response::HttpResponseBuilder::new();
             builder.set_code(400).set_version(response::HttpVersion::Basic);
             builder.set_body(response::MessageBody::Str("<html><head><title>BadReq</title></head><body>Bad Request</body></html>".to_string()));
-            //let response = "HTTP/1.0 400 Bad Request\r\n\r\n<html><head><title>BadReq</title></head><body>Bad Request</body></html>";
             //stream.write_all(response.as_bytes()).unwrap();
             stream.write_all(&(builder.finalize().unwrap()).as_bytes()).unwrap();
             drop(stream);
@@ -72,11 +71,6 @@ impl tcpio::TCPHandler for Handler {
                 )
                 .to_string(),
             ));
-        /*let response = format!(
-            "HTTP/1.0 200 OK\r\n\r\n<html><head><title>Local</title></head><body>{}</body></html>",
-            html::sanitize(format!("{}", request).as_str())
-        );
-        stream.write_all(response.as_bytes()).unwrap();*/
         stream
             .write_all(&(builder.finalize().unwrap()).as_bytes())
             .unwrap();
