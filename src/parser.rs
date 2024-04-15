@@ -3,7 +3,7 @@
 use regex::Regex;
 mod error;
 pub mod header_line;
-pub mod header_pair;
+//pub mod header_pair;
 pub mod traits;
 use error::HttpRequestMessageErr;
 use header_line::HttpHeaderLine;
@@ -68,6 +68,17 @@ impl std::default::Default for HttpRequestMessage {
     }
 }
 
+fn parse_header_argument_by_line(s: &str) -> Result<(&str, &str), ()> {
+    let rex = Regex::new(r"(?ui)^(?P<key>[\w\-!#$%&'*+.^_`|~]+)\s*:\s*(?P<val>[^\r\n]+)\r?\n?$")
+        .expect(&format!("Unable to compile the regex in {}", file!()));
+    if let Some(captures) = rex.captures(s) {
+        let extractor = |name| captures.name(name).ok_or(());
+        return Ok((extractor("key")?.as_str(), extractor("val")?.as_str()));
+    } else {
+        Err(())
+    }
+}
+
 impl FromBuf for HttpRequestMessage {
     type Err = HttpRequestMessageErr;
     fn from_buf<T>(s: &mut T) -> Result<Self, Self::Err>
@@ -96,9 +107,9 @@ impl FromBuf for HttpRequestMessage {
                 // No more header
                 break;
             }
-            if let Ok(result) = header_pair::HttpHeaderPair::parse_header_line(&arg_line) {
-                let (key, val): (String, String) = result.into();
-                head_arg.insert(key, val);
+            if let Ok(result) = parse_header_argument_by_line(arg_line) {
+                let (key, val) = result;
+                head_arg.insert(key.to_string(), val.to_string());
             } else {
                 break;
             }
