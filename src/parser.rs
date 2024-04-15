@@ -1,3 +1,5 @@
+//! Parsing module for the HTTP protocol message
+
 use regex::Regex;
 mod error;
 pub mod header_line;
@@ -10,6 +12,8 @@ use std::collections::HashMap;
 use std::io::BufRead;
 pub use traits::FromBuf;
 
+/// Default type for the header argument, considering that in http, the header argument
+/// is in the structure of key:value
 type HeaderArgument = HashMap<String, String>;
 
 pub struct HttpRequestMessage {

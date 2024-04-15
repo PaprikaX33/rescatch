@@ -1,4 +1,3 @@
-//use std::net::TcpListener;
 mod error;
 mod html;
 mod http;
@@ -50,10 +49,17 @@ impl tcpio::TCPHandler for Handler {
         println!("Request received");
         let Ok(request) = parser::HttpRequestMessage::from_buf(&mut buf_reader) else {
             let mut builder = response::HttpResponseBuilder::new();
-            builder.set_code(400).set_version(response::HttpVersion::Basic);
-            builder.set_body(response::MessageBody::Str("<html><head><title>BadReq</title></head><body>Bad Request</body></html>".to_string()));
+            builder
+                .set_code(400)
+                .set_version(response::HttpVersion::Basic);
+            builder.set_body(response::MessageBody::Str(
+                "<html><head><title>BadReq</title></head><body>Bad Request</body></html>"
+                    .to_string(),
+            ));
             //stream.write_all(response.as_bytes()).unwrap();
-            stream.write_all(&(builder.finalize().runwrap()).as_bytes()).unwrap();
+            stream
+                .write_all(&(builder.finalize().runwrap()).as_bytes())
+                .unwrap();
             drop(stream);
             return Ok(0);
         };
