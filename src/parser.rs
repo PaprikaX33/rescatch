@@ -3,7 +3,6 @@
 use regex::Regex;
 mod error;
 pub mod header_line;
-//pub mod header_pair;
 pub mod traits;
 use error::HttpRequestMessageErr;
 use header_line::HttpHeaderLine;
