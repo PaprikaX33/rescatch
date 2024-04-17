@@ -1,4 +1,6 @@
 mod builder;
+mod status_code;
+use super::HeaderArgument;
 pub use builder::HttpResponseBuilder;
 
 pub enum MessageBody {
@@ -21,6 +23,8 @@ pub struct HttpResponse {
     err_message: Option<String>,
     version: HttpVersion,
     body: Option<MessageBody>,
+    /// Note : args will ignore Content-Length
+    args: HeaderArgument,
 }
 
 impl HttpResponse {
@@ -36,14 +40,16 @@ impl HttpResponse {
                 self.code,
                 match &self.err_message {
                     Some(txt) => txt.as_str(),
-                    None => match self.code {
-                        400 => "Bad Request",
-                        _ => "Unknown Code",
-                    },
+                    None => status_code::str_expand(self.code),
                 },
             )
             .as_bytes(),
         );
+        for (key, val) in &self.args {
+            if key != "Content-Length" {
+                header.extend_from_slice(format!("{key}: {val}\r\n").as_bytes());
+            }
+        }
         match &self.body {
             None => header.extend_from_slice("\r\n".as_bytes()),
             Some(body) => {
@@ -59,10 +65,12 @@ impl HttpResponse {
         err_message: Option<String>,
         version: HttpVersion,
         body: Option<MessageBody>,
+        args: HeaderArgument,
     ) -> HttpResponse {
         return HttpResponse {
             code,
             version,
+            args,
             body,
             err_message,
         };

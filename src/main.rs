@@ -1,13 +1,12 @@
-//use std::net::TcpListener;
 mod error;
 mod html;
-mod response;
-//mod http_parser;
+mod http;
 mod parser;
 mod tcpio;
+use http::response;
 use parser::FromBuf;
+use runwrap::rn;
 use std::io::Write;
-
 fn main() -> std::io::Result<std::process::ExitCode> {
     let mut config: tcpio::Ipconf = tcpio::Ipconf {
         ip: "0.0.0.0".to_string(),
@@ -45,15 +44,27 @@ struct Handler {}
 impl tcpio::TCPHandler for Handler {
     type Err = <parser::HttpRequestMessage as FromBuf>::Err;
     fn execute(&self, mut stream: std::net::TcpStream) -> Result<u8, Self::Err> {
+        //Todo:
+        // let response = Self::Response::new()
+        // Response should be part of the tcpio server suite, rather than the handler
+        // handling the stream directly, and response is just the http structure builder.
+        // Otherwise let handler be just http handler rather than http + content.
         println!("New connection");
         let mut buf_reader = std::io::BufReader::new(&mut stream);
         println!("Request received");
         let Ok(request) = parser::HttpRequestMessage::from_buf(&mut buf_reader) else {
             let mut builder = response::HttpResponseBuilder::new();
-            builder.set_code(400).set_version(response::HttpVersion::Basic);
-            builder.set_body(response::MessageBody::Str("<html><head><title>BadReq</title></head><body>Bad Request</body></html>".to_string()));
+            builder
+                .set_code(400)
+                .set_version(response::HttpVersion::Basic);
+            builder.set_body(response::MessageBody::Str(
+                "<html><head><title>BadReq</title></head><body>Bad Request</body></html>"
+                    .to_string(),
+            ));
             //stream.write_all(response.as_bytes()).unwrap();
-            stream.write_all(&(builder.finalize().unwrap()).as_bytes()).unwrap();
+            stream
+                .write_all(&(builder.finalize().runwrap()).as_bytes())
+                .unwrap();
             drop(stream);
             return Ok(0);
         };
@@ -71,6 +82,10 @@ impl tcpio::TCPHandler for Handler {
                 )
                 .to_string(),
             ));
+        builder.set_arg(
+            "Set-Cookie".to_string(),
+            "access=AccessedRecently; max-age=300".to_string(),
+        );
         stream
             .write_all(&(builder.finalize().unwrap()).as_bytes())
             .unwrap();
