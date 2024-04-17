@@ -31,7 +31,11 @@ where
     for stream in listener.incoming() {
         let stream = stream.unwrap();
         match handler.execute(stream) {
-            Ok(_) => (),
+            Ok(val) => {
+                if val == 100 {
+                    return Ok(0);
+                }
+            }
             Err(x) => {
                 println!("{:?}", x);
             }
